@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# This script processes a text file by removing "ANC" from the first column and leading zeros, then saves the modified data into a new text file.
+# This code give us the subject_data.text which we use in dcm2bids
+# Specify the path to your input text file containing data to be processed
+input_file="/mnt/Storage/Backupdata/MRI/ADC/Scripts/Rename_file.txt"
+
+# Use sed to remove "ANC" from the first column and leading zeros
+# Then redirect the output to a new file named "subject_data.txt"
+sed 's/ANC//g' "$input_file"  | sed 's/^0*//' > "subject_data.txt"
+
+# Print a message indicating the completion of the script
+echo "Done! subject_data for the result."
