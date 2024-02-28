@@ -1,3 +1,9 @@
+# This code verifies the presence of essential sequences in the DICOM files associated with each SUBJECT. 
+# Additionally, it ensures the completeness of required slices within each sequence.
+# for this code we need the path to the directory containing the DICOM files.
+# It will give two outputs, 1. missing_sequencies : containing all the missing sequences; 2. modified_data : it will show how many complete, incomplete and unknown sequencies are there.
+
+
 # Import necessary libraries
 from pydicom import dcmread as dr
 import csv
