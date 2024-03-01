@@ -1,7 +1,35 @@
-# This code verifies the presence of essential sequences in the DICOM files associated with each SUBJECT. 
-# Additionally, it ensures the completeness of required slices within each sequence.
-# for this code we need the path to the directory containing the DICOM files.
-# It will give two outputs, 1. missing_sequencies : containing all the missing sequences; 2. modified_data : it will show how many complete, incomplete and unknown sequencies are there.
+"""
+This script processes DICOM files to extract information and perform analysis.
+
+Requirements:
+- pydicom library for DICOM file processing
+- csv module for CSV file writing
+- os module for file and directory operations
+- pandas library for data manipulation
+
+Usage:
+- Update the 'path' variable to specify the directory containing DICOM files.
+- Ensure that the directory structure conforms to the expected format for processing.
+- Run the script.
+
+The script iterates through the specified directory structure to extract DICOM file information.
+For each DICOM file found:
+- Information such as subject ID, accession number, patient name, sequence name, number of files in the sequence,
+  and date are extracted.
+- The extracted information is stored in a DataFrame.
+
+After extracting information from all DICOM files, the script performs the following tasks:
+1. Calculates completeness of file counts for each sequence based on expected counts.
+2. Adds a column to indicate completeness of file counts.
+3. Exports the modified DataFrame to a CSV file.
+
+Additionally, the script checks for missing sequences for each subject:
+1. Groups the data by subject and checks for missing sequences or sequences with an incorrect number of files.
+2. Constructs a DataFrame containing information about missing sequences.
+3. Exports the missing sequences DataFrame to a separate CSV file.
+
+Note: Ensure that the expected file counts for each sequence are accurately defined in the 'expected_files' dictionary.
+"""
 
 
 # Import necessary libraries
