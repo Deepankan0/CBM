@@ -73,7 +73,7 @@ for subj in files:
                     data = dr(dicom_path)
                     data_info = [subj, data.AccessionNumber, data.PatientName, data.StudyDescription,
                                  data.StudyComments, Seq, data.ProtocolName,
-                                 len(os.listdir(os.path.join(path, subj, Seq))) - 2,
+                                 len(os.listdir(os.path.join(path, subj, Seq))),
                                  data.PerformedProcedureStepStartDate]
 
                     subj_info.append(data_info)
