@@ -1,4 +1,5 @@
 #!/bin/bash
+# this is updated versiom of dcm2bids
 # DICOM to BIDS Converter
 
 #This Bash script automates the process of converting DICOM files to the Brain Imaging Data Structure (BIDS) format. 
