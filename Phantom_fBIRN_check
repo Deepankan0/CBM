@@ -1,137 +1,105 @@
-#This code process DICOM files from Phantom_files, extracting relevant information, checking completeness, and identifying missing sequences for each day's data. It outputs the results to CSV files.
+"""
+DICOM File Analysis Script
 
+This script reads PHANTOM_DICOM files from a yearly_montly directory structure(old_format),
+extracts relevant information, checks file completeness for daily fBIRN,
+and exports the results to a CSV file.
 
+Requirements:
+- pydicom (imported as dcmread from pydicom)
+- pandas
+
+Authors:
+Chakraborty, Deepankan
+BS, Vaishnavi
+July, 2024
+CBM
+"""
 
 # Import necessary libraries
-from pydicom import dcmread as dr
-import csv
-import os
-import pandas as pd
-from collections import defaultdict
+from pydicom import dcmread as dr  # Importing dcmread function from pydicom as dr
+import os  # Operating System module for file and directory operations
+import pandas as pd  # Importing pandas library for data manipulation
+from collections import defaultdict  # Importing defaultdict from collections module
 
-# Set the path to the root directory containing DICOM files
-path = '/home/deepankan/fBIRN/2023'
+# Define the path to the directory containing the DICOM files
+path = '/mnt/Storage/Backupdata/MRI/26122023/To_ADC/PHANTOM DATA/FBIRN/2023'
 
-# Initialize an empty list to store information about DICOM files
+# Initialize a list to store final information
 final_info = []
 
-# Iterate through each month in the specified path
+# Loop through each subject
 for month in os.listdir(path):
     month_path = os.path.join(path, month)
-    
-    # Check if the current item is a directory
     if os.path.isdir(month_path):
-        
-        # Iterate through each subject in the current month
         for subj in os.listdir(month_path):
             subj_path = os.path.join(month_path, subj)
-            
-            # Check if the current item is a directory
             if os.path.isdir(subj_path):
-                
-                # Iterate through each sequence in the current subject
                 for seq in os.listdir(subj_path):
                     seq_path = os.path.join(subj_path, seq)
-                    
-                    # Check if the current item is a directory and not a specific sequence
-                    if os.path.isdir(seq_path) and 'S0' not in seq:
-                        
-                        # Exclude 'DIRFILE' directory
-                        if seq != 'DIRFILE':
-                            
-                            # Retrieve list of files starting with 'I' in the current sequence directory
-                            i_files = [file for file in os.listdir(seq_path) if file.startswith('I')]
-                            
-                            # Check if there are any 'I' files
-                            if i_files:
-                                i_file_path = os.path.join(seq_path, i_files[0])
-                                print('Trying to read DICOM file:', i_file_path)
-                                
-                                try:
-                                    # Read DICOM file using pydicom
-                                    data = dr(i_file_path, force=True)
-                                    
-                                    # Extract relevant information from DICOM file
-                                    data_info = [
-                                        month,
-                                        subj,
-                                        getattr(data, 'AccessionNumber', None),
-                                        getattr(data, 'PatientName', None),
-                                        getattr(data, 'StudyDate', None),
-                                        seq,
-                                        getattr(data, 'ProtocolName', None),
-                                        len(os.listdir(seq_path)) - 2  # Excluding '.' and '..'
-                                    ]
-                                    
-                                    # Append information to the final_info list
-                                    final_info.append(data_info)
-
-                                except IOError:
-                                    print('Failed to read DICOM file:', i_file_path)
-                            else:
-                                print('No I-file found. Skipping...'.format(seq_path))
+                    if os.path.isdir(seq_path) and 'S0' not in seq and seq != 'DIRFILE':
+                        # Check for DICOM files starting with 'I'
+                        i_files = [file for file in os.listdir(seq_path) if file.startswith('I')]
+                        if i_files:
+                            i_file_path = os.path.join(seq_path, i_files[0])
+                            print('Trying to read DICOM file:', i_file_path)
+                            try:
+                                # Read DICOM file and extract relevant information
+                                data = dr(i_file_path, force=True)
+                                data_info = [
+                                    month,
+                                    subj,
+                                    getattr(data, 'AccessionNumber', None),  # Check if AccessionNumber exists
+                                    getattr(data, 'PatientName', None),      # Check if PatientName exists
+                                    getattr(data, 'StudyDate', None),        # Check if StudyDate exists
+                                    seq,
+                                    getattr(data, 'ProtocolName', None),     # Check if ProtocolName exists
+                                    len(os.listdir(seq_path))
+                                ]
+                                final_info.append(data_info)
+                            except IOError:
+                                print('Failed to read DICOM file:', i_file_path)
+                        else:
+                            print('No I-file found in {}'.format(seq_path))
 
 # Convert the collected information into a DataFrame
-data = pd.DataFrame(final_info, columns=['Month', 'File_name', 'AccesionNumber', 'Phantom_name', 'Date', 'Seq', 'Sequence_name', 'N_files'])
+data = pd.DataFrame(final_info, columns=['Month', 'File_name', 'AccessionNumber', 'PatientName', 'StudyDate', 'Seq', 'ProtocolName', 'N_files'])
 
-# Dictionary to store the expected number of files for each sequence
+# Dictionary to store expected number of files for each sequence
 expected_files = {
     'REST_FE_EPI_PB_VOLUME_SHIM': 6160,
     'DKI_56slices_SHIM_PB_VOLUME': 616,
     'Survey': 9,
     'T1W_FFE': 2,
-    'DelRec - T1W_FFE': 54,
+    'DelRec - T1W_FFE': 58,
 }
 
 # Function to check if N_files is complete
 def is_complete(row):
-    sequence = row['Sequence_name']
+    """
+    Function to determine if the number of files (N_files) for a given row
+    meets the expected count based on the sequence (ProtocolName).
+    
+    Parameters:
+    - row: pandas Series representing a row of the DataFrame
+    
+    Returns:
+    - 1 if N_files meets or exceeds the expected count
+    - 0 if N_files does not meet the expected count
+    - -1 if the sequence is unknown
+    """
+    sequence = row['ProtocolName']
     if sequence in expected_files:
         expected_count = expected_files[sequence]
-        return 1 if row['N_files'] == expected_count else 0
+        return 1 if row['N_files'] >= expected_count else 0
     else:
-        return -1  # Indicate an unknown sequence
+        return -1  # Indicate unknown sequence
 
 # Insert a new column 'N_files_Complete' to indicate completeness
 data['N_files_Complete'] = data.apply(is_complete, axis=1)
 
 # Export the modified data to CSV
-modified_data_file = '/home/deepankan/modified_Ph.csv'
+modified_data_file = '/mnt/Storage/Backupdata/MRI/26122023/PHANTOM_DICOM_Information/fBIRN.csv'
 data.to_csv(modified_data_file, index=False)
 
 print('Modified data saved to %s' % modified_data_file)
-
-# Group data by SUBJECT and check for missing sequences
-missing_sequences = defaultdict(list)
-for subject, group in data.groupby('File_name'):
-    missing = []
-    for sequence, expected_count in expected_files.items():
-        if sequence not in group['Seq'].values:
-            missing.append(sequence)
-        elif group[group['Seq'] == sequence]['N_files'].iloc[0] != expected_count:
-            missing.append(sequence)
-    if missing:
-        missing_sequences[subject].extend(missing)
-    elif subject not in missing_sequences:
-        missing_sequences[subject].append('NIL')
-
-# Create a DataFrame for missing sequences
-missing_data = []
-for subject, sequences in missing_sequences.items():
-    subject_data = data[data['File_name'] == subject]
-    missing_data.append([
-        subject_data['Month'].iloc[0],
-        subject,
-        subject_data['AccesionNumber'].iloc[0],
-        subject_data['Phantom_name'].iloc[0],
-        subject_data['Date'].iloc[0],
-        ','.join(set(sequences))  # Use a set to ensure unique sequences
-    ])
-
-missing_df = pd.DataFrame(missing_data, columns=['Month', 'File_name', 'AccesionNumber', 'Phantom_name', 'Date', 'Missing Sequences'])
-
-# Export missing sequences to CSV
-missing_sequences_file = '/home/deepankan/missing_sequences_ph.csv'
-missing_df.to_csv(missing_sequences_file, index=False)
-
-print('Missing sequences saved to %s' % missing_sequences_file)
