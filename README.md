@@ -17,7 +17,7 @@ The purpose of this script is to simplify the process of converting DICOM files 
 
 ## Example Usage
 it will give the data in this format:
-ADBS_ID/ASSESSMENT_ID/Sequence/(ADBS_ID)_(ASSESMENT_ID)_run-xx_protocol.ext
+SUBJECT_ID/ASSESSMENT_ID/Sequence/(SUBJECT_ID)_(ASSESMENT_ID)_run-xx_protocol.ext
 
 ## Contributors
 - Deepankan0: Creator and maintainer
