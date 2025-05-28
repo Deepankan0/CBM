@@ -110,6 +110,9 @@ for filename in *; do
                 sed -i 's/"PhaseEncodingAxis": "j",/&\n\t"PhaseEncodingDirection": "j-",/' {} \;
                 find *dir-PA_epi*.json -exec \
                 sed -i 's/"PhaseEncodingAxis": "j",/&\n\t"PhaseEncodingDirection": "j",/' {} \;
+                find *dwi*.json -exec \
+                sed -i 's/"PhaseEncodingAxis": "j",/&\n\t"PhaseEncodingDirection": "j",/' {} \;
+                
 
 
 
